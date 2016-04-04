@@ -25,7 +25,7 @@ This tokenizer only identifies the first instance of a token in the list. It
 does not run accross the entire stream - it stops once one has been found. If
 no token is found, $null is returned.
 #>
-function Get-FirstToken {
+function Get-NextToken {
     Param(
         [System.IO.FileStream]$FileStream,
         [string[]]$Tokens
@@ -113,6 +113,7 @@ function Get-ImmediateToken {
         $matchingToken = $false
         foreach ($token in $Tokens) {
             $tempTokenString = $tokenStrings[$token] + $c
+            
             if ($token -like "$tempTokenString*") {
                 $tokenStrings[$token] = $tempTokenString
                 $matchingToken = $true
@@ -150,7 +151,7 @@ function Get-ImmediateToken {
 <#
 .SYNOPSIS
 
-Similar to the Get-FirstToken function except this one will ensure that the
+Similar to the Get-NextToken function except this one will ensure that the
 token is not escaped.
 
 .PARAMETER FileStream
@@ -184,7 +185,7 @@ function Get-FirstUnescapedToken {
     $cursor = 0
     $index = 0
     while ($true) {
-        $results = Get-FirstToken $FileStream (@(, $Escape) + $Tokens)
+        $results = Get-NextToken $FileStream (@(, $Escape) + $Tokens)
         $cursor += $results.cursor
         $index += $results.index
         

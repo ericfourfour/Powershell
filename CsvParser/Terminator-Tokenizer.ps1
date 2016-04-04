@@ -31,12 +31,12 @@ This tokenizer only identifies the field-terminator, row-terminator and
 eof-terminator. It does not identify any other tokens that it may pass in its
 search.
 #>
-function Run-TerminatorTokenizer {
+function Get-NextTerminator {
     Param(
         [System.IO.FileStream]$FileStream,
         [string]$FieldTerminator,
         [string]$RowTerminator
     )
     
-    return Get-FirstToken $FileStream @($FieldTerminator, $RowTerminator)
+    return Get-NextToken $FileStream @($FieldTerminator, $RowTerminator)
 }

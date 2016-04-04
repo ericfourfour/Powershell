@@ -11,7 +11,7 @@ if (-not ([System.Management.Automation.PSTypeName]'MockFileStream').Type) {
     Add-Type -TypeDefinition $mockFileStream
 }
 
-function TestRun-TerminatorTokenizer {
+function TestGet-NextTerminator {
     Param(
         [string]$str,
         [string]$FieldTerminator,
@@ -21,7 +21,7 @@ function TestRun-TerminatorTokenizer {
     
     $fileStream = New-Object MockFileStream($str)
     
-    $results = Run-TerminatorTokenizer $fileStream $FieldTerminator $RowTerminator
+    $results = Get-NextTerminator $fileStream $FieldTerminator $RowTerminator
     
     $results.index | Should Be $Expected.index
     $results.cursor | Should Be $Expected.cursor
@@ -31,7 +31,7 @@ function TestRun-TerminatorTokenizer {
     $fileStream.Dispose()
 }
 
-Describe "Run-TerminatorTokenizer" {
+Describe "Get-NextTerminator" {
     Context "Single Char Terminator" {
         $fieldTerminator = ","
         $rowTerminator = "`n"
@@ -57,13 +57,13 @@ Describe "Run-TerminatorTokenizer" {
         }
         
         It "Gets next field terminator first" {
-            TestRun-TerminatorTokenizer $fieldTermFirstStr $fieldTerminator $rowTerminator $fieldTermFirstExpected
+            TestGet-NextTerminator $fieldTermFirstStr $fieldTerminator $rowTerminator $fieldTermFirstExpected
         }
         It "Gets next row terminator first" {
-            TestRun-TerminatorTokenizer $rowTermFirstStr $fieldTerminator $rowTerminator $rowTermFirstExpected
+            TestGet-NextTerminator $rowTermFirstStr $fieldTerminator $rowTerminator $rowTermFirstExpected
         }
         It "Gets next file terminator first" {
-            TestRun-TerminatorTokenizer $eofTermFirstStr $fieldTerminator $rowTerminator $eofTermFirstExpected
+            TestGet-NextTerminator $eofTermFirstStr $fieldTerminator $rowTerminator $eofTermFirstExpected
         }
     }
     Context "Multi Char Terminator" {
@@ -85,10 +85,10 @@ Describe "Run-TerminatorTokenizer" {
         }
         
         It "Gets next field terminator first" {
-            TestRun-TerminatorTokenizer $fieldTermFirstStr $fieldTerminator $rowTerminator $fieldTermFirstExpected
+            TestGet-NextTerminator $fieldTermFirstStr $fieldTerminator $rowTerminator $fieldTermFirstExpected
         }
         It "Gets next row terminator first" {
-            TestRun-TerminatorTokenizer $rowTermFirstStr $fieldTerminator $rowTerminator $rowTermFirstExpected
+            TestGet-NextTerminator $rowTermFirstStr $fieldTerminator $rowTerminator $rowTermFirstExpected
         }
     }
 }
