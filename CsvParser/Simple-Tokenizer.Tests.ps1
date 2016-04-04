@@ -33,12 +33,12 @@ function Test-Get-NextToken {
 
 function Test-Get-ImmediateToken {
     Param(
-        [string]$str,
+        [string]$Str,
         [string[]]$Tokens,
         [PSObject]$Expected
     )
     
-    $fileStream = New-Object MockFileStream($str)
+    $fileStream = New-Object MockFileStream($Str)
     
     $results = Get-ImmediateToken $fileStream $Tokens
     
@@ -70,36 +70,118 @@ function Test-Get-NextUnescapedToken {
     $fileStream.Dispose()
 }
 
+function eofExpectation {
+    Param(
+        [string]$Str
+    )
+    return @{index = $Str.Length; cursor = $Str.Length; token = $null}
+}
+
 Describe "Get-NextToken" {
-    Context "No tokens" {
-        It "Returns no valid index" { }
+    function noMatchExpectation {
+        Param(
+            [string]$Str
+        )
+        return @{index = -1; cursor = $Str.Length; token = $null}
     }
-    Context "Null token" {
-        It "Matches eof" { }
+    function noMatchTest-Get-NextToken {
+        Param(
+            [string]$Str,
+            [string[]]$Tokens
+        )
+        return Test-Get-NextToken $Str $Tokens (noMatchExpectation $Str)
+    }
+    function matchExpectation {
+        Param(
+            [string]$Token,
+            [int]$Index
+        )
+        return @{index = $Index; cursor = $Index + $Token.Length; token = $Token}
+    }
+    function matchTest-Get-NextToken {
+        Param(
+            [string]$Str,
+            [string[]]$Tokens,
+            [string]$Token,
+            [int]$Index
+        )
+        return Test-Get-NextToken $Str $Tokens (matchExpectation $Token $Index)
+    }
+    
+    Context "No tokens" {
+        It "Doesn't match" {
+            Test-Get-NextToken "abc" ([string[]]@()) @{index = -1; cursor = 0; token = $null}
+        }
+    }
+    Context "Null or empty token" {
+        function eofTest-Get-NextToken {
+            Param(
+                [string]$Str,
+                [string[]]$Tokens
+            )
+            Test-Get-NextToken $Str $Tokens (eofExpectation $Str)
+        }
+    
+        It "Matches eof on empty string" {
+            eofTest-Get-NextToken "abc" @(, "")
+        }
+        It "Matches eof on null cast to string" {
+            eofTest-Get-NextToken "abc" ([string[]]@(, $null))
+        }
     }
     Context "Single char tokens" {
-        It "Matches when tokens are in stream" { }
-        It "Doesn't match when tokens are not in stream" { }
+        $singleCharTokens = @(',', '`n', '|')
+        It "Matches when tokens are in stream" {
+            matchTest-Get-NextToken "abc,123" $singleCharTokens "," 3
+        }
+        It "Doesn't match when tokens are not in stream" {
+            noMatchTest-Get-NextToken "abc.123" $singleCharTokens
+        }
     }
     Context "Multi char tokens" {
-        It "Matches when tokens are in stream" { }
-        It "Doesn't match when tokens are not in stream" { }
-        It "Doesn't match partial tokens" { }
+        $multiCharTokens = @("**", "`r`n", ", ")
+        It "Matches when tokens are in stream" {
+            matchTest-Get-NextToken "abc**123" $multiCharTokens "**" 3
+        }
+        It "Doesn't match when tokens are not in stream" {
+            noMatchTest-Get-NextToken "abc..123" $multiCharTokens
+        }
+        It "Doesn't match partial tokens" {
+            noMatchTest-Get-NextToken "abc*.123`r.def,`t" $multiCharTokens
+        }
     }
     Context "Tokens inside tokens" {
-        It "Matches token that ends first" { }
-        It "Matches first token in list when ending at same time" {}
-        It "Doesn't match when no tokens are in stream" {}
+        $tokensInsideTokens1 = @("a", "ab")
+        $tokensInsideTokens2 = @("bc", "abc")
+        $tokensInsideTokens3 = @("abc", "bc")
+        It "Matches token that ends first" {
+            matchTest-Get-NextToken "abc" $tokensInsideTokens1 "a" 0
+        }
+        It "Matches first token in list when ending at same time" {
+            matchTest-Get-NextToken "abc" $tokensInsideTokens2 "bc" 1
+            matchTest-Get-NextToken "abc" $tokensInsideTokens3 "abc" 0
+        }
+        It "Doesn't match when no tokens are in stream" {
+            noMatchTest-Get-NextToken "def" $tokensInsideTokens1
+        }
     }
 }
 
 Describe "Get-ImmediateToken" {
     Context "No tokens" {
-        It "Returns no valid index" { }
+        It "Returns no valid index" {
+            Test-Get-ImmediateToken "abc" ([string[]]@()) @{index = -1; cursor = 0; token = $null}
+        }
     }
-    Context "Null token" {
-        It "Matches when cursor at end of stream" { }
-        It "Doesn't match when cursor is not at end of stream" {}
+    Context "Null or empty token" {
+        It "Matches eof when empty string and cursor is at end of stream" {
+            Test-Get-ImmediateToken "" @(, "") (eofExpectation "")
+        }
+        It "Matches eof when null cast to string and cursor is at end of stream" {
+            Test-Get-ImmediateToken "" ([string[]]@(, $null)) (eofExpectation "")
+        }
+        It "Doesn't match when empty string and cursor is not at end of stream" {}
+        It "Doesn't match when null cast to string and cursor is not at end of stream" {}
     }
     Context "Single char tokens" {
         It "Matches when tokens are at start of stream" {}

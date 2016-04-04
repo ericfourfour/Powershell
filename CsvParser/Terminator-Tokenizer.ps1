@@ -38,5 +38,5 @@ function Get-NextTerminator {
         [string]$RowTerminator
     )
     
-    return Get-NextToken $FileStream @($FieldTerminator, $RowTerminator)
+    return Get-NextToken $FileStream @($FieldTerminator, $RowTerminator, "")
 }

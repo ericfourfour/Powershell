@@ -37,11 +37,23 @@ function Get-NextToken {
     $cursor = 0
     $index = -1
     
+    if ($Tokens -eq $null -or $Tokens.Length -eq 0) {
+        return @{
+            cursor = $cursor;
+            index = $index;
+            token = $tokenString;
+        }
+    }
+    
     while (($byte = $FileStream.ReadByte()) -ge 0) {
         $c = [char]$byte
         $cursor++
         
         foreach ($token in $Tokens) {
+            if ($token -eq "") {
+                continue
+            }
+        
             $tempTokenString = $tokenStrings[$token] + $c
             if ($token -like "$tempTokenString*") {
                 $tokenStrings[$token] = $tempTokenString
@@ -56,11 +68,16 @@ function Get-NextToken {
         }
         
         if ($tokenString -ne $null) {
+            
+            $index = $cursor - $tokenString.Length
             break
         }
     }
     
-    $index = $cursor - $tokenString.Length
+    if ($tokenString -ne $null -or ($Tokens -contains "")) {
+        $index = $cursor - $tokenString.Length
+    }
+    
     return @{
         cursor = $cursor;
         index = $index;
