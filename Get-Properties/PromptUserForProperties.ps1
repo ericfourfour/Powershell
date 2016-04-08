@@ -78,6 +78,9 @@ function PromptUserForPropertyValues {
             $defaultValue = $prop.defaultValue
         } elseif ($prop.defaultPattern) {
             $subs = $Substitutions | foreach { $values[$_] }
+            
+            $Substitutions
+            $subs
         
             $defaultValue = [string]::Format($prop.defaultPattern, $subs)
         }
@@ -105,7 +108,7 @@ function PromptUserForPropertyValues {
     return $values
 }
 
-function PreparePromptProperties {
+function Load-PropertyDetails {
     switch ($PsCmdlet.ParameterSetName) {
         "attr" {
             if (!$Order) {
@@ -132,5 +135,5 @@ function PreparePromptProperties {
     }
 }
 
-$PropertyDetails = PreparePromptProperties
-PromptUserForPropertyValues $PropertyDetails.Attributes $PropertyDetails.Order $PropertyDetails.Substitutions
+$PropertyDetails = Load-PropertyDetails
+PromptUserForPropertyValues ($PropertyDetails.Attributes) ($PropertyDetails.Order) ($PropertyDetails.Substitutions)
