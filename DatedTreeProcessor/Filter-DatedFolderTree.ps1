@@ -1,21 +1,14 @@
 <#
-.SYNOPSIS
-
-Retain only folders that are older than, and only contain subfolders that are
-older than, the specified number of months. If a folder has no date, it is
-assumed to be old enough.
+Filter out all nodes in the tree whos parents have the flag oldEnough = $true.
 #>
-function Filter-DatedFolderTreeByMinAgeInMonths {
+function Filter-DatedFolderTreeByAge {
     Param(
-        [PSObject]$Tree,
-        [int]$MinAge
+        [PSObject]$Tree
     )
     
-    $minDate = (Get-Date).AddMonths(-$MinAge)
+    $filteredTree = $Tree
     
-    foreach ($node in $Tree) {
-        if ($node.date) {
-        
-        }
+    if ($Tree.isOldEnough) {
+        $filteredTree.subfolders = $null
     }
 }
