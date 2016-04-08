@@ -31,4 +31,4 @@ function Make-Scripts {
     return $scripts
 }
 
-Make-Scripts @(".\test.sql", ".\test2.sql") @{Database = "TestDB"; Table = "TestTable"; TempTable = "#TempTable"}
+Make-Scripts @(".\test.sql", ".\test2.sql") @{Database = "TestDB"; Table = "TestTable"; tempTable = "#TempTable"}

@@ -26,7 +26,7 @@ function Make-Script {
     $template = (Get-Content $Path) -Join "`r`n"
     $script = $template
     foreach ($prop in $Properties.GetEnumerator()) {
-        $script = $script.Replace("<$($prop.Key)>", "$($prop.Value)")
+        $script = $script -Replace [regex]::escape("<$($prop.Key)>"),"$($prop.Value)"
     }
     return $script
 }
